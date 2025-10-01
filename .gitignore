@@ -1,0 +1,5 @@
+/agent-app/node_modules
+/agent-app/.env
+.env
+/agent-app/.firebase
+/agent-app/dist

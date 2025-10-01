@@ -1,0 +1,88 @@
+Multiple Agent
+
+1. Flight, Weather, and News
+
+"Show me flights from Chennai to London on 2025-10-15 and tell me the weather and latest news in London."
+
+2. Tourist Attractions and Food
+
+"Suggest tourist attractions and the best places to eat South Indian food in Singapore."
+
+3. Emergency Alert and Traffic
+
+"Is it safe to travel to Tokyo now, and how is the traffic from Narita Airport to Shibuya?"
+
+4. News and Sentiment
+
+"What are the latest news and public opinion about Marina Bay Sands in Singapore?"
+
+5. Weather, Emergency, and Traffic
+
+"What's the weather in San Francisco, are there any emergency alerts, and how is the traffic to the airport?"
+
+6. Food, Sentiment, and Tourist Attractions
+
+"Where can I find authentic Italian food in Paris, what do people think about the Eiffel Tower, and what are the top tourist spots?"
+
+7. Flights and Emergency
+
+"Find flights from Mumbai to Jakarta and let me know if there are any travel warnings or emergencies in Jakarta."
+
+
+
+
+Single Agent:
+
+1. FlightCheckerAgent
+
+"Show me flights from Chennai to New York on 2025-10-15"
+"I want to check flights from Mumbai to US"
+"Find flights from India to Australia"
+
+2. TouristAttractionAgent
+
+"What are the top tourist attractions in Paris?"
+"Suggest places to visit in Singapore"
+"Tourist spots in Tokyo, Japan"
+
+3. WeatherAgent
+
+"What's the weather in London?"
+"Tell me the weather in Chennai"
+"How is the weather in Sydney today?"
+
+4. NewsAgent
+
+"Show me news about AI advancements"
+"Tell news about karur incident in tamilnadu"
+"Latest news in Mumbai"
+
+5. SentimentPopularityAgent
+
+"What do people think about Marina Bay Sands? Reviews: Amazing view; Very crowded; Worth the price"
+"Is the Eiffel Tower popular among tourists?"
+"How do people feel about Times Square?"
+
+6. FoodPlannerAgent
+
+"I want Tamil Nadu style food in Singapore, I am from Tamil Nadu"
+"Suggest Italian restaurants in Paris for someone from Rome"
+"Where can I find authentic Japanese food in New York?"
+
+7. EmergencyAlertAgent
+
+"Are there any emergency alerts in Japan?"
+"Is it safe to travel to California now?"
+"Any recent disasters in Indonesia?"
+
+8. TrafficConditionAgent
+
+"How is traffic in Singapore from Marina Bay Sands to Changi Airport?"
+"Tell me about traffic in Mumbai"
+"What are the peak traffic hours in London?"
+
+9. ChatAgent
+
+"Hi, how are you?"
+"What's the current time?"
+"Good morning!"
