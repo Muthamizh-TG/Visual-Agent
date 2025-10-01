@@ -4,3 +4,5 @@ openai
 requests
 pydantic
 textblob
+amadeus
+python-dotenv
