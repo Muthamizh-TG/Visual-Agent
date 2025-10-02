@@ -558,7 +558,7 @@ const styles = `
   }
 
   .message-bubble {
-    max-width: 75%;
+    max-width: 100%;
     padding: 1rem 1.25rem;
     border-radius: 1.25rem;
     font-size: 0.95rem;
@@ -885,6 +885,14 @@ const LangGraphVisualizer = () => {
       description: 'Acts like ChatGPT for normal conversation',
       details: 'Function: chat_agent()\nCapabilities: General conversation',
     },
+    {
+      id: 'custom',
+      type: 'agent',
+      label: 'Custom Agent',
+      icon: Activity,
+      description: 'Custom agent for demo',
+      details: 'Function: custom_agent()\nCapabilities: Custom logic',
+    },
   ];
   // Create refs for each node
   const nodeRefs = React.useMemo(() => {
@@ -1069,8 +1077,10 @@ const LangGraphVisualizer = () => {
                 const fromRect = fromRef.current.getBoundingClientRect();
                 const toRect = toRef.current.getBoundingClientRect();
                 const canvasRect = canvasRef.current.getBoundingClientRect();
-                const x1 = fromRect.right - canvasRect.left;
+                // Start from center of router node
+                const x1 = fromRect.left + fromRect.width / 2 - canvasRect.left;
                 const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+                // End at left center of agent node
                 const x2 = toRect.left - canvasRect.left;
                 const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
                 const isActive = executionPath.includes(node.id);
@@ -1084,7 +1094,7 @@ const LangGraphVisualizer = () => {
                     stroke={isActive ? '#22c55e' : '#ffffffff'}
                     strokeWidth={isActive ? 4 : 3}
                     strokeDasharray={isActive ? '8 6' : '6 6'}
-                    style={{ opacity: isActive || executionPath.includes('router') ? 1 : 0.4, transition: 'stroke 0.3s', display: 'none' }}
+                    style={{ opacity: isActive || executionPath.includes('router') ? 1 : 0.4, transition: 'stroke 0.3s'}}
                   />
                 );
               })}
@@ -1096,25 +1106,40 @@ const LangGraphVisualizer = () => {
             const isActive = executionPath.includes(node.id);
             // Grid placement: router center left, agents distributed in grid
             const gridArea = {
-              'router': { gridColumn: 1, gridRow: 2 },
-              'flight': { gridColumn: 2, gridRow: 1 },
-              'tourist': { gridColumn: 3, gridRow: 1 },
-              'weather': { gridColumn: 4, gridRow: 1 },
-              'news': { gridColumn: 4, gridRow: 2 },
-              'sentiment': { gridColumn: 4, gridRow: 3 },
-              'food': { gridColumn: 3, gridRow: 3 },
-              'emergency': { gridColumn: 2, gridRow: 3 },
-              'traffic': { gridColumn: 2, gridRow: 2 },
-              'chat': { gridColumn: 3, gridRow: 2 },
+              'router': { gridColumn: '2 / span 2', gridRow: 2 },
+              'flight': { gridColumn: 1, gridRow: 2 },
+              'tourist': { gridColumn: 2, gridRow: 1 },
+              'weather': { gridColumn: 3, gridRow: 1 },
+              'news': { gridColumn: 4, gridRow: 1 },
+              'sentiment': { gridColumn: 4, gridRow: 2 },
+              'food': { gridColumn: 4, gridRow: 3 },
+              'emergency': { gridColumn: 3, gridRow: 3 },
+              'traffic': { gridColumn: 1, gridRow: 3 },
+              'chat': { gridColumn: 2, gridRow: 3 },
+              'custom': { gridColumn: 1, gridRow: 1 },
             }[node.id] || { gridColumn: 1, gridRow: 1 };
+            // Unique dark blue gradients for each node
+            const nodeGradients = {
+              router: 'linear-gradient(165deg, #4b4b4bff 0%, #0082beff 100%)', // white to light blue
+              flight: 'linear-gradient(135deg, #232323ff 0%, #005544ff 100%)', // white to gray
+              tourist: 'linear-gradient(135deg, #232323ff 0%, #300018ff 100%)', // white to light blue
+              weather: 'linear-gradient(135deg, #232323ff 0%, #004062ff 100%)', // white to light sky
+              news: 'linear-gradient(135deg, #232323ff 0%, #ffea00ff 100%)', // white to pale yellow
+              sentiment: 'linear-gradient(135deg, #232323ff 0%, #69003cff 100%)', // white to pink
+              food: 'linear-gradient(135deg, #232323ff 0%, #00581fff 100%)', // white to mint
+              emergency: 'linear-gradient(135deg, #232323ff 0%, #792727ff 100%)', // white to light red
+              traffic: 'linear-gradient(135deg, #232323ff 0%, #4c005fff 100%)', // white to light gold
+              chat: 'linear-gradient(135deg, #232323ff 0%, #643a00ff 100%)', // white to light blue
+              custom: 'linear-gradient(135deg, #232323ff 0%, #5b000fff 100%)', // white to lavender
+            };
             let nodeStyle = {
               gridColumn: gridArea.gridColumn,
               gridRow: gridArea.gridRow,
-              width: node.id === 'router' ? 190 : 190,
-              height: 90,
+              width: node.id === 'router' ? 340 : 190,
+              height: node.id === 'router' ? 140 : 90,
               padding: '30px',
-              background: node.id === 'router' && !isActive ? '#ffffffff' : (isActive ? '#006a94ff' : '#ffffffff'),
-              color: isActive ? '#ffffff' : '#000000ff',
+              background: isActive ? 'linear-gradient(135deg, #ffffffff 0%, #ffffffff 100%)' : nodeGradients[node.id],
+              color: isActive ? '#000000ff' : '#ffffff',
               borderRadius: 12,
               display: 'flex',
               alignItems: 'center',
@@ -1122,7 +1147,7 @@ const LangGraphVisualizer = () => {
               fontWeight: 700,
               fontSize: 20,
               boxShadow: isActive ? '0 4px 24px rgba(239,68,68,0.15)' : '0 2px 8px rgba(0,0,0,0.08)',
-              border: isActive ? '3px solid #fff' : '3px solid #006a94ff',
+              border: isActive ? '3px solid #ffffffff' : '3px solid #ffffff70',
               zIndex: isActive ? 10 : 2,
               cursor: 'pointer',
               opacity: 1,
@@ -1137,7 +1162,7 @@ const LangGraphVisualizer = () => {
                 onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                  <IconComponent style={{ width: 50, height: 50, color: isActive ? '#fff' : '#006a94ff' }} />
+                  <IconComponent style={{ width: 50, height: 50, color: isActive ? '#000000ff' : '#ffffffff' }} />
                   <span>{node.label}</span>
                 </div>
               </div>
