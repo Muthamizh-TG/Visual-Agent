@@ -1,4 +1,7 @@
+
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import requests
 from openai import OpenAI
 import logging
@@ -219,6 +222,9 @@ def weather_agent(user_input: str):
     import re
     match = re.search(r'in ([A-Za-z ]+)', user_input)
     city = match.group(1).strip() if match else "Chennai"
+    # Remove trailing words like 'today', 'now', 'currently', 'please', etc.
+    city = re.sub(r'\b(today|now|currently|please|tomorrow|right now|at present)\b', '', city, flags=re.IGNORECASE).strip()
+    city = re.sub(r'\s+', ' ', city)
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {"q": city, "appid": OPENWEATHER_API_KEY, "units": "metric"}
     try:
