@@ -1,3 +1,4 @@
+print(">>> RUNNING THIS main.py <<<")
 
 import os
 from dotenv import load_dotenv
@@ -5,9 +6,30 @@ load_dotenv()
 import requests
 from openai import OpenAI
 import logging
+from fastapi import Response
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 import uvicorn
+
+
+# --- FastAPI setup ---
+
+app = FastAPI(title="Multi-Agent Chat API")
+
+# --- Terminal Output Storage ---
+terminal_output = ""  # Global variable to store terminal output
+
+def append_terminal_output(line: str):
+    global terminal_output
+    terminal_output += line + "\n"
+
+@app.get("/terminal-output")
+def get_terminal_output():
+    return Response(content=terminal_output, media_type="text/plain")
+
+
+
 
 # --- FastAPI setup ---
 app = FastAPI(title="Multi-Agent Chat API")
@@ -571,8 +593,18 @@ class ChatResponse(BaseModel):
 async def health_check():
     return {"status": "healthy", "service": "Multi-Agent API (OpenAI)"}
 
+
+# Store latest agent response in memory
+latest_agent_output = "(No agent output yet)"
+
+@app.get("/terminal-output", response_class=PlainTextResponse)
+async def terminal_output():
+    return latest_agent_output
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_message: ChatMessage):
+    global latest_agent_output
     try:
         start_time = time.time()
         user_input = chat_message.message
@@ -582,7 +614,6 @@ async def chat_endpoint(chat_message: ChatMessage):
         responses = []
         agent_responses = {}
 
-        # Only allow ChatAgent for daily conversation
         def is_daily_conversation(text):
             import re
             greetings = [r"\bhi\b", r"\bhello\b", r"\bhey\b", r"\bgood (morning|afternoon|evening|night)\b", r"\bhow are you\b", r"\bwhat's up\b", r"\bhow's it going\b"]
@@ -601,7 +632,6 @@ async def chat_endpoint(chat_message: ChatMessage):
             return s
 
         agent_name_map = {}
-        # Mapping from agent LLM names to frontend keys
         frontend_agent_keys = {
             "FlightCheckerAgent": "flight",
             "TouristAttractionAgent": "tourist",
@@ -614,7 +644,6 @@ async def chat_endpoint(chat_message: ChatMessage):
             "ChatAgent": "chat"
         }
         prev_output = user_input
-        # If only ChatAgent and it's a daily conversation, just return its response as summary
         if agents_to_run == ["ChatAgent"] and is_daily_conversation(user_input):
             agent_key = pascal_to_title("ChatAgent")
             func = agents_map.get(agent_key)
@@ -624,6 +653,7 @@ async def chat_endpoint(chat_message: ChatMessage):
             summary = resp
             execution_time = f"{(time.time() - start_time):.2f}s"
             logging.info(f"Summary: {summary}")
+            latest_agent_output = resp
             return ChatResponse(
                 response=summary,
                 query_type="ChatAgent",
@@ -636,7 +666,6 @@ async def chat_endpoint(chat_message: ChatMessage):
                 agent_name_map[agent_name] = agent_key
                 func = agents_map.get(agent_key)
                 if func:
-                    # If ChatAgent, only allow daily conversation
                     if agent_key == "Chat Agent":
                         if not is_daily_conversation(user_input):
                             resp = "Sorry, I can only respond to normal daily conversation (greetings, time, date, etc.)."
@@ -644,7 +673,6 @@ async def chat_endpoint(chat_message: ChatMessage):
                             agent_responses[frontend_agent_keys.get(agent_name, agent_name)] = resp
                             prev_output = resp
                             continue
-                    # Special handling for Flight Checker Agent: check for valid IATA codes
                     if agent_key == "Flight Checker Agent":
                         if not origin or not destination or origin == "UNK" or destination == "UNK":
                             resp = ("Sorry, I couldn't determine a valid airport for your request. "
@@ -654,7 +682,6 @@ async def chat_endpoint(chat_message: ChatMessage):
                             prev_output = resp
                             continue
                     logging.info(f"Invoking agent: {agent_key}")
-                    # Pass previous agent's output as input to the next agent
                     if agent_key == "Flight Checker Agent":
                         resp = func(prev_output, origin, destination, date)
                     elif agent_key in ["Weather Agent", "Emergency Alert Agent", "Traffic Condition Agent", "Tourist Attraction Agent"]:
@@ -670,8 +697,8 @@ async def chat_endpoint(chat_message: ChatMessage):
         response_str = "\n".join(responses)
         print(f"[DEBUG] Raw agent responses: {responses}")
         print(f"[DEBUG] Response string: {response_str}")
+        latest_agent_output = response_str
 
-        # Always summarize with ChatGPT, even if only one agent
         summary_prompt = (
             "You are a helpful assistant. Here are the responses from several specialized agents to a user query. "
             "Your job is to create a single, clear, and concise summary for the user. "
@@ -685,23 +712,19 @@ async def chat_endpoint(chat_message: ChatMessage):
             temperature=0.5
         )
         summary = summary_response.choices[0].message.content.strip()
-        # Remove 'Summary:' prefix if present
         if summary.lower().startswith('summary:'):
             summary = summary[len('Summary:'):].lstrip()
 
-        # Post-check: ensure at least one key point from every agent's response is present in the summary
         import re
         def key_sentence(text):
-            # Take the first non-empty line or first sentence
             for line in text.split('\n'):
                 s = line.strip()
                 if s:
-                    return s[:120]  # limit length
+                    return s[:120]
             return text[:120]
         missing = []
         for idx, resp in enumerate(responses):
             key = key_sentence(resp)
-            # If key not in summary (case-insensitive, ignore punctuation)
             def normalize(t):
                 return re.sub(r'[^a-zA-Z0-9]', '', t).lower()
             if key and normalize(key) not in normalize(summary):

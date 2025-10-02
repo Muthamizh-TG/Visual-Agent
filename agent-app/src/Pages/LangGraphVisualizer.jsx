@@ -1,4 +1,19 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+// Terminal UI styles
+const terminalStyles = {
+  background: '#18181b',
+  color: '#39ff14',
+  fontFamily: 'monospace',
+  fontSize: '1rem',
+  borderRadius: '8px',
+  padding: '1rem',
+  margin: '2rem 1rem',
+  minHeight: '180px',
+  maxHeight: '300px',
+  overflowY: 'auto',
+  boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
+  border: '1px solid #333',
+};
 import { Bot, Calculator, Heart, Cloud, Newspaper, Smile, ArrowRight, MessageSquare, Send, Activity } from 'lucide-react';
 
 // Enhanced White Theme Styles
@@ -794,6 +809,36 @@ if (typeof document !== 'undefined') {
 
 
 const LangGraphVisualizer = () => {
+  // Terminal output state
+  const [terminalOutput, setTerminalOutput] = useState('');
+  // Clear terminal on page refresh
+  useEffect(() => {
+    setTerminalOutput('');
+  }, []);
+  const [terminalConnected, setTerminalConnected] = useState(null);
+
+  // Fetch terminal output from backend (plain text)
+  useEffect(() => {
+    const fetchTerminalOutput = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/terminal-output');
+        if (!response.ok) {
+          setTerminalConnected(false);
+          setTerminalOutput('Unable to fetch terminal output.');
+          return;
+        }
+        const text = await response.text();
+        setTerminalOutput(text);
+        setTerminalConnected(true);
+      } catch {
+        setTerminalConnected(false);
+        setTerminalOutput('Unable to fetch terminal output.');
+      }
+    };
+    fetchTerminalOutput();
+    const interval = setInterval(fetchTerminalOutput, 5000);
+    return () => clearInterval(interval);
+  }, []);
   const [selectedNode, setSelectedNode] = useState(null);
   const [executionPath, setExecutionPath] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -951,6 +996,9 @@ const LangGraphVisualizer = () => {
     const newMessage = { type: 'user', content: userInput };
     setMessages(prev => [...prev, newMessage]);
 
+    // Show 'Thinking...' in terminal while waiting for agent responses
+    setTerminalOutput('Thinking...');
+
     try {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
@@ -980,6 +1028,13 @@ const LangGraphVisualizer = () => {
       // Always use the summary field from backend for chat display
       let summaryContent = data.summary || data.response || 'No response';
 
+      // Show agents being invoked in terminal
+      setTerminalOutput(
+        agentNames.length > 0
+          ? `Invoking agents: ${agentNames.join(', ')}\n\n`
+          : ''
+      );
+
       // Animate router, then each agent one by one
       let delay = 0;
       setExecutionPath([]); // All gray
@@ -990,8 +1045,33 @@ const LangGraphVisualizer = () => {
         setTimeout(() => setExecutionPath(['router']), delay += 800);
       });
 
-      // Only show the summary from the router/LLM
+      // Show all agent responses in terminal after invocation
       setTimeout(() => {
+        let allResponses = '';
+        let uniqueResponses = new Set();
+        // Collect all agent responses and summary
+        let responseBlocks = [];
+        if (hasAgentResponses && Object.keys(agentResponses).length > 0) {
+          Object.entries(agentResponses).forEach(([agent, resp], idx, arr) => {
+            responseBlocks.push({ agent, resp });
+          });
+        }
+        // Add summary as a block if not already present
+        if (summaryContent && (!responseBlocks.some(b => b.resp === summaryContent))) {
+          responseBlocks.push({ agent: 'Summary', resp: summaryContent });
+        }
+        // Only show unique responses
+        responseBlocks.forEach(({ agent, resp }, idx) => {
+          if (!uniqueResponses.has(resp)) {
+            if (agent !== 'Summary') {
+              allResponses += `\n[${agent} is answering...]\n--- ${agent} ---\n${resp}\n`;
+            } else {
+              allResponses += `\n${resp}`;
+            }
+            uniqueResponses.add(resp);
+          }
+        });
+        setTerminalOutput(prev => prev + allResponses);
         setExecutionPath([]);
         setMessages(prev => [
           ...prev,
@@ -1026,9 +1106,9 @@ const LangGraphVisualizer = () => {
   // Connection-related functions removed for better responsiveness
 
   return (
-    <div className="workflow-container">
-      {/* Left Panel - Workflow Visualization */}
-      <div className="left-panel">
+    <div className="workflow-container" style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+      {/* Left Panel - Workflow Visualization and Terminal stacked */}
+      <div className="left-panel" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         {/* Header */}
         <div className="header">
           <div className="header-content">
@@ -1047,11 +1127,11 @@ const LangGraphVisualizer = () => {
         </div>
 
 
-        {/* Responsive Workflow Canvas using CSS Grid */}
+        {/* Responsive Workflow Canvas using CSS Grid (80vh) */}
         <div
           className="workflow-canvas"
           style={{
-            minHeight: 'calc(100vh - 5rem)',
+            height: '60vh',
             width: '100%',
             marginTop: '50px',
             position: 'relative',
@@ -1060,6 +1140,7 @@ const LangGraphVisualizer = () => {
             gridTemplateRows: 'repeat(3, 1fr)',
             alignItems: 'center',
             justifyItems: 'center',
+            overflow: 'auto',
           }}
           ref={canvasRef}
         >
@@ -1135,9 +1216,9 @@ const LangGraphVisualizer = () => {
             let nodeStyle = {
               gridColumn: gridArea.gridColumn,
               gridRow: gridArea.gridRow,
-              width: node.id === 'router' ? 340 : 190,
-              height: node.id === 'router' ? 140 : 90,
-              padding: '30px',
+              width: node.id === 'router' ? 260 : 140,
+              height: node.id === 'router' ? 90 : 60,
+              padding: '18px',
               background: isActive ? 'linear-gradient(135deg, #ffffffff 0%, #ffffffff 100%)' : nodeGradients[node.id],
               color: isActive ? '#000000ff' : '#ffffff',
               borderRadius: 12,
@@ -1145,7 +1226,7 @@ const LangGraphVisualizer = () => {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
-              fontSize: 20,
+              fontSize: node.id === 'router' ? 16 : 12,
               boxShadow: isActive ? '0 4px 24px rgba(239,68,68,0.15)' : '0 2px 8px rgba(0,0,0,0.08)',
               border: isActive ? '3px solid #ffffffff' : '3px solid #ffffff70',
               zIndex: isActive ? 10 : 2,
@@ -1162,7 +1243,7 @@ const LangGraphVisualizer = () => {
                 onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                  <IconComponent style={{ width: 50, height: 50, color: isActive ? '#000000ff' : '#ffffffff' }} />
+                  <IconComponent style={{ width: 30, height: 30, color: isActive ? '#000000ff' : '#ffffffff' }} />
                   <span>{node.label}</span>
                 </div>
               </div>
@@ -1191,6 +1272,34 @@ const LangGraphVisualizer = () => {
             <div className="execution-status">
               <div className="status-indicator"></div>
               Executing workflow...
+            </div>
+          )}
+        </div>
+        {/* Terminal Output Overlay (40vh, bottom) */}
+        <div style={{
+          height: '40vh',
+          background: '#18181b',
+          color: '#39ff14',
+          fontFamily: 'monospace',
+          fontSize: '1rem',
+          borderTop: '2px solid #333',
+          boxShadow: '0 -2px 16px rgba(0,0,0,0.2)',
+          zIndex: 10,
+          padding: '1rem',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: '0.5rem', color: '#fff' }}>Python Terminal Output</div>
+          <div style={{ marginBottom: '0.5rem', color: terminalConnected === true ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
+            {terminalConnected === true && 'Terminal connected successfully'}
+            {terminalConnected === false && 'Terminal not connected'}
+          </div>
+          {/* Color-coded agent responses in terminal */}
+          {terminalOutput && (
+            <div style={{ marginTop: '1rem', flex: 1, overflowY: 'auto' }}>
+              {/* Show terminal output exactly as in Python terminal, no parsing or coloring */}
+              <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: '#39ff14' }}>{terminalOutput.trim()}</pre>
             </div>
           )}
         </div>
