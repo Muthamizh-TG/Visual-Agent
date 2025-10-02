@@ -1131,7 +1131,7 @@ const LangGraphVisualizer = () => {
         <div
           className="workflow-canvas"
           style={{
-            height: '60vh',
+            height: '75vh',
             width: '100%',
             marginTop: '50px',
             position: 'relative',
@@ -1277,7 +1277,7 @@ const LangGraphVisualizer = () => {
         </div>
         {/* Terminal Output Overlay (40vh, bottom) */}
         <div style={{
-          height: '40vh',
+          height: '25vh',
           background: '#18181b',
           color: '#39ff14',
           fontFamily: 'monospace',
