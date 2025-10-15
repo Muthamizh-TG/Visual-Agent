@@ -1,16 +1,45 @@
-# React + Vite
+# Visual-Agent
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository contains a Python backend and a React-based frontend for visualizing agent interactions. The project includes test prompts in `Test Prompt.txt` that you can use to test the application's functionality.
 
-Currently, two official plugins are available:
+## Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Follow these steps to set up and run the project:
 
-## React Compiler
+### 1. Clone the Repository
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+git clone https://github.com/Muthamizh-TG/Visual-Agent.git
+cd Visual-Agent
+```
 
-## Expanding the ESLint configuration
+### 2. Set up Python Backend
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Install the required Python packages:
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the Python script:
+```bash
+python main.py
+```
+
+### 3. Set up Frontend (agent-app)
+
+1. Navigate to the agent-app directory:
+```bash
+cd agent-app
+```
+
+2. Install Node.js dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+The application should now be running locally. You can access the frontend through the URL displayed in your terminal (typically http://localhost:5173).
