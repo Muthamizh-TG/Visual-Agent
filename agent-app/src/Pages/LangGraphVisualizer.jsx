@@ -46,8 +46,8 @@ const styles = `
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.3), transparent 50%),
+      radial-gradient(circle at 20% 50%, rgba(4, 0, 60, 1), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(147, 0, 74, 1), transparent 50%),
       radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.3), transparent 50%);
     animation: gradientShift 15s ease infinite;
     pointer-events: none;
@@ -1278,8 +1278,8 @@ const LangGraphVisualizer = () => {
         {/* Terminal Output Overlay (40vh, bottom) */}
         <div style={{
           height: '25vh',
-          background: '#18181b',
-          color: '#39ff14',
+          background: '#000000ff',
+          color: '#ffffffff',
           fontFamily: 'monospace',
           fontSize: '1rem',
           borderTop: '2px solid #333',
@@ -1291,7 +1291,7 @@ const LangGraphVisualizer = () => {
           flexDirection: 'column',
         }}>
           <div style={{ fontWeight: 700, marginBottom: '0.5rem', color: '#fff' }}>Python Terminal Output</div>
-          <div style={{ marginBottom: '0.5rem', color: terminalConnected === true ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
+          <div style={{ marginBottom: '0.5rem', color: terminalConnected === true ? '#00471aff' : '#440000ff', fontWeight: 600 }}>
             {terminalConnected === true && 'Terminal connected successfully'}
             {terminalConnected === false && 'Terminal not connected'}
           </div>
@@ -1299,7 +1299,7 @@ const LangGraphVisualizer = () => {
           {terminalOutput && (
             <div style={{ marginTop: '1rem', flex: 1, overflowY: 'auto' }}>
               {/* Show terminal output exactly as in Python terminal, no parsing or coloring */}
-              <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: '#39ff14' }}>{terminalOutput.trim()}</pre>
+              <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: '#137b00ff' }}>{terminalOutput.trim()}</pre>
             </div>
           )}
         </div>
